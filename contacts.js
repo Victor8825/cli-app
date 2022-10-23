@@ -18,7 +18,7 @@ const getContactById = async (contactId) => {
   try {
     const db = await listContacts();
     const contact = db.find(({ id }) => id === contactId);
-    console.table(contact);
+    return contact || null;
   } catch (err) {
     console.log(err);
   }
@@ -26,13 +26,12 @@ const getContactById = async (contactId) => {
 
 const addContact = async (name, email, phone) => {
   try {
+    const db = await listContacts();
     const id = nanoid();
     const contact = { id, name, email, phone };
-    const db = await listContacts();
     db.push(contact);
     await fs.writeFile(contactsPath, JSON.stringify(db));
-
-    return db;
+    return contact;
   } catch (err) {
     console.log(err);
   }
@@ -41,13 +40,13 @@ const addContact = async (name, email, phone) => {
 const removeContact = async (contactId) => {
   try {
     const db = await listContacts();
-    const contact = db.find(({ id }) => id === contactId);
-    if (!contact) {
+    const idx = db.findIndex(({ id }) => id === contactId);
+    if (idx === -1) {
       return null;
     }
-    const contacts = db.filter(({ id }) => id !== contactId);
-    await fs.writeFile(contactsPath, JSON.stringify(contacts));
-    return contact;
+    const [removedContact] = db.splice(idx, 1);
+    await fs.writeFile(contactsPath, JSON.stringify(db));
+    return removedContact;
   } catch (err) {
     console.log(err);
   }
